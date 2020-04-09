@@ -1,6 +1,7 @@
 package fadintan.learns.ppmtool.web;
 
 import fadintan.learns.ppmtool.Project.Project;
+import fadintan.learns.ppmtool.services.MapValidationErrorService;
 import fadintan.learns.ppmtool.services.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,21 +25,16 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
+    @Autowired
+    private MapValidationErrorService mapErrorService;
+
     // ResponseEntity controls json object yg mau dipass ke client.
     // BindingResult validator dr si objek. Ada error apa ngga
     @PostMapping("")
     public ResponseEntity<?> createNewProject(@Valid @RequestBody Project project, BindingResult result){
-        // validation
-        if (result.hasErrors()){
-
-            // untuk dapetin list errornya, taro di hashmap errorMap (fieldError : defaultMessage)
-            Map<String, String> errorMap = new HashMap<>();
-            for(FieldError error: result.getFieldErrors()){
-                errorMap.put(error.getField(), error.getDefaultMessage());
-            }
-
-            return new ResponseEntity<Map<String, String>>(errorMap, HttpStatus.BAD_REQUEST);
-        }
+        // Validasi
+        ResponseEntity errorMap = mapErrorService.MapValidationService(result);
+        if(errorMap!=null) return errorMap;
 
         // ProjectService utk save ke db
         Project project1 = projectService.saveOrUpdateProject(project);
